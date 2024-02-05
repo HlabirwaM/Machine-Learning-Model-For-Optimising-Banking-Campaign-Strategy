@@ -1,0 +1,265 @@
+---
+title: "Machine-Learning-Model-For-Optimising-Banking-Campaign-Strategy"
+output:
+  pdf_document: default
+  html_document: default
+date: "2024-02-04"
+---
+
+
+This machine learning project seeks to create a valuable model capable of predicting whether a client will subscribe to a business product offered by a Portuguese bank following a marketing campaign.
+
+Exploratory Data Analysis
+
+Loading the libraries
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(gtsummary)
+```
+
+The dataset has already been separated into training and test datasets. The dataset was published Prakhar Rathi by on Kaggle.
+
+```{r}
+train <- read_csv2("train.csv")
+str (train)
+head (train)
+
+```
+
+
+1) Understanding the demographics of the clients
+
+
+```{r}
+
+# Defining the demographic function f 
+# has two input variables, the tibble train data and x ( categorical variable in the train tibble)
+
+f <- function (train, x) {
+ dem <- train %>% group_by_at (vars({{x}})) %>% 
+  summarise ( total_clients = n(),
+              percentage = round ( n()* 100 / nrow(train), 2)) %>%
+  arrange (desc(total_clients))
+ return(dem)
+}
+```
+
+```{r}
+# Education background 
+f (train, education)
+```
+
+```{r}
+# Marital status proportion
+f (train, marital)
+```
+
+```{r}
+# Job description proportion
+f (train, job)
+```
+
+How many clients have personal loans?
+
+```{r}
+f (train, loan)
+```
+How many clients have credit in default?
+
+```{r}
+f(train, default)
+```
+How many clients have a housing loan
+
+```{r}
+f(train, housing)
+```
+Campaign contact summary
+
+```{r}
+# Total contacts performed during the campaign period
+
+sum (train$campaign)
+```
+```{r}
+# Types of communication methods summary
+f(train, contact)
+```
+
+```{r}
+# Average contact (last contact) duration in minutes per contact method
+
+train %>% group_by (contact) %>% 
+  summarise ( total_contacts = sum(campaign),
+              ave_contact_duration = round ( mean(duration/60),2)) %>%
+  arrange (desc(ave_contact_duration))
+```
+
+```{r}
+# last contact day of the month
+f(train, day)
+```
+```{r}
+# last contact month of the year
+f(train, month)
+```
+```{r}
+# Days elapsed since the client's last contact from the last campaign ( -1 indicating that the client was not contacted previously)
+f(train, pdays)
+```
+``` {r}
+# number of contacts performed before this campaign 
+f(train, previous)
+```
+```{r}
+# outcome of the previous marketing campaign
+f(train, poutcome)
+```
+
+Understanding the demographic effect on the campaign outcome:
+
+```{r}
+# First we get a summary of the campaign outcome
+train <- train %>% rename( outcome = y)
+f(train, outcome)
+```
+
+```{r}
+# Understanding the education level of clients that subscribed to the the financial product
+
+train_yes <- train %>% filter (outcome == "yes") ## filtering clients that subscribed
+
+# we also want add the total amount of contacts made and average duration to understand the level of resources used
+
+f2 <- function (train_yes, x1, x2,x3) {
+ dem <- train_yes %>% group_by_at (vars({{x1}})) %>% 
+  summarise ( total_clients = n(),
+              percentage = round ( n()* 100 / nrow(train_yes), 2),
+              total_contacts = sum({{x2}}),
+              contacts_to_clients_ratio = round (total_contacts / total_clients,1),
+              ave_duration_min = round (mean(({{x3}})/60),2)) %>%
+  arrange (desc(total_clients))
+ return(dem)
+}
+
+f2(train_yes, education, campaign, duration)
+```
+
+```{r}
+# Understanding the marital status of clients that subscribed to the financial product
+
+f2 (train_yes, marital, campaign, duration )
+```
+```{r}
+# Understanding the job description of clients that subscribed to the financial product
+
+f2 (train_yes, job, campaign, duration )
+```
+```{r}
+# Understanding the loan status of clients that subscribed to the financial product
+
+f2 (train_yes, loan, campaign, duration )
+```
+```{r}
+# Understanding the default status of clients that subscribed to the financial product
+
+f2 (train_yes, default, campaign, duration )
+```
+```{r} 
+# Understanding the effect of communication method on the number of clients that subscribed to the financial product
+
+f2 (train_yes, contact, campaign, duration )
+```
+```{r}
+# Understanding the housing status of clients that subscribed to the financial product
+
+f2 (train_yes, housing, campaign, duration )
+```
+```{r}
+# Understanding the effect of outcome of previous campaign on clients that subscribed to the financial product
+
+f2 (train_yes, poutcome, campaign, duration )
+```
+```{r}
+# Evaluating if the yearly average balance affect the campaign outcome
+
+f3 <- function (train, x1,x2) {
+ dem <- train %>% group_by_at (vars({{x1}})) %>% 
+  summarise ( total_clients = n(),
+              percentage = round ( n()* 100 / nrow(train), 2),
+              ave_balance = round (mean({{x2}}),1)) %>%
+  arrange (desc(total_clients))
+ return(dem)
+}
+f3(train, outcome, balance)
+```
+
+````{r}
+# Education bargraph
+
+train %>% ggplot ( aes(education)) + geom_bar(aes(fill = outcome)) +
+  geom_text(aes(label = after_stat(count)), stat = "count", position = "stack",vjust= -0.5, size = 3) +
+  theme_classic() + labs (x = "Education level", y = "No. of clients")
+```
+```{r}
+# Marital status bargraph
+# Education bargraph
+
+train %>% ggplot ( aes(marital)) + geom_bar(aes(fill = outcome)) +
+  geom_text(aes(label = after_stat(count)), stat = "count", position = "stack",vjust= -0.5, size = 3) +
+  theme_classic() + labs (y = "No. of clients", X = "Marital status")
+```
+```{r}
+# Job description bargraph
+train %>% ggplot ( aes(y = job)) + geom_bar(aes(fill = outcome)) +
+  geom_text(aes(label = after_stat(count)), stat = "count", position = "stack",hjust= -0.5, size = 2) +
+  theme_classic() + labs (y = "Job description", x = "No. of clients")
+```
+```{r}
+# Job description bargraph
+train %>% ggplot ( aes(contact)) + geom_bar(aes(fill = outcome)) +
+  geom_text(aes(label = after_stat(count)), stat = "count", position = "stack",vjust= - 0.5, size = 3) +
+  theme_classic() + labs (y = "No. of clients", x = "Communication method")
+```
+```{r}
+# Housing loan status bargraph 
+train %>% ggplot ( aes(housing)) + geom_bar(aes(fill = outcome)) +
+  geom_text(aes(label = after_stat(count)), stat = "count", position = "stack",vjust= - 0.5, size = 3) +
+  theme_classic() + labs (y = "No. of clients", x = "Communication method")
+```
+
+```{r}
+# Loan status bargraph 
+train %>% ggplot ( aes(loan)) + geom_bar(aes(fill = outcome)) +
+  geom_text(aes(label = after_stat(count)), stat = "count", position = "stack",vjust= - 0.5, size = 3) +
+  theme_classic() + labs (y = "No. of clients", x = "Loan status")
+```
+
+```{r}
+# Loan default status bargraph 
+train %>% ggplot ( aes(default)) + geom_bar(aes(fill = outcome)) +
+  geom_text(aes(label = after_stat(count)), stat = "count", position = "stack",vjust= - 0.5, size = 3) +
+  theme_classic() + labs (y = "No. of clients", x = "Loan default status")
+```
+
+```{r}
+# Previous campaign outcome  bargraph 
+train %>% ggplot ( aes(poutcome)) + geom_bar(aes(fill = outcome)) +
+  geom_text(aes(label = after_stat(count)), stat = "count", position = "stack",vjust= - 0.5, size = 3) +
+  theme_classic() + labs (y = "No. of clients", x = "Previous outcome")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
