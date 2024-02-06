@@ -77,7 +77,7 @@ We leverage previous campaign data related to subscribing to a term deposit for 
 
 ### Exploratory Data Analysis (EDA)
 
-Intensive EDA of the data has been conducted using R and SQL. Leveraging these tools, we gained valuable insights into the dataset's characteristics, distributions, and potential correlations. Additionally, a PowerBI dashboard has been developed, providing an interactive and visual representation of key findings.
+Intensive EDA of the data has been conducted using [R](https://github.com/HlabirwaM/Machine-Learning-Model-For-Optimising-Banking-Campaign-Strategy/blob/main/Exploratory%20data%20analysis.pdf) and [SQL](https://github.com/HlabirwaM/My-SQL-Projects/blob/main/bankcampaign.sql). Leveraging these tools, we gained valuable insights into the dataset's characteristics, distributions, and potential correlations. Additionally, a PowerBI dashboard has been developed, providing an interactive and visual representation of key findings.
 
 The data, already in a clean format, facilitated a smooth EDA process, allowing us to dive deep into understanding patterns and trends.
 
